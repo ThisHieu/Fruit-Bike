@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bike Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            margin: auto;
+            background-color: #87CEEB;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const bikeWidth = 50;
+        const bikeHeight = 30;
+        const fruitWidth = 10;
+        const fruitHeight = 10;
+        const obstacleWidth = 30;
+        const obstacleHeight = 50;
+        const bikeSpeed = 3;
+        const fruitSpeed = 5;
+        const obstacleSpeed = 2;
+        const fruitInterval = 2000; // 2 seconds
+
+        let bikeY = canvas.height / 2 - bikeHeight / 2;
+        let fruits = [];
+        let obstacles = [];
+        let score = 0;
+        let shooting = false;
+
+        function drawBike() {
+            ctx.fillStyle = "green";
+            ctx.fillRect(50, bikeY, bikeWidth, bikeHeight);
+        }
+
+        function drawFruits() {
+            ctx.fillStyle = "red";
+            for (let fruit of fruits) {
+                ctx.fillRect(fruit.x, fruit.y, fruitWidth, fruitHeight);
+            }
+        }
+
+        function drawObstacles() {
+            ctx.fillStyle = "brown";
+            for (let obstacle of obstacles) {
+                ctx.fillRect(obstacle.x, obstacle.y, obstacleWidth, obstacleHeight);
+            }
+        }
+
+        function updateGame() {
+            // Move the bike
+            if (shooting) {
+                bikeY -= bikeSpeed;
+            } else {
+                bikeY += bikeSpeed;
+            }
+
+            // Generate fruits
+            if (Date.now() % fruitInterval === 0) {
+                fruits.push({ x: canvas.width - fruitWidth, y: Math.random() * canvas.height });
+            }
+
+            // Move fruits
+            for (let fruit of fruits) {
+                fruit.x -= fruitSpeed;
+            }
+
+            // Generate obstacles
+            if (Math.random() < 0.02) {
+                obstacles.push({ x: canvas.width - obstacleWidth, y: Math.random() * canvas.height });
+            }
+
+            // Move obstacles
+            for (let obstacle of obstacles) {
+                obstacle.x -= obstacleSpeed;
+            }
+
+            // Check for collisions
+            for (let i = 0; i < fruits.length; i++) {
+                for (let j = 0; j < obstacles.length; j++) {
+                    if (fruits[i].x + fruitWidth > obstacles[j].x &&
+                        fruits[i].x < obstacles[j].x + obstacleWidth &&
+                        fruits[i].y + fruitHeight > obstacles[j].y &&
+                        fruits[i].y < obstacles[j].y + obstacleHeight) {
+                        fruits.splice(i, 1);
+                        obstacles.splice(j, 1);
+                        score++;
+                    }
+                }
+            }
+
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw everything
+            drawBike();
+            drawFruits();
+            drawObstacles();
+
+            // Display score
+            ctx.fillStyle = "black";
+            ctx.font = "20px Arial";
+            ctx.fillText("Score: " + score, 10, 30);
+
+            // Check for collisions with obstacles
+            for (let obstacle of obstacles) {
+                if (50 < obstacle.x + obstacleWidth &&
+                    50 + bikeWidth > obstacle.x &&
+                    bikeY < obstacle.y + obstacleHeight &&
+                    bikeY + bikeHeight > obstacle.y) {
+                    gameOver();
+                }
+            }
+
+            requestAnimationFrame(updateGame);
+        }
+
+        function gameOver() {
+            alert("Game over! Your score: " + score);
+            document.location.reload();
+        }
+
+        canvas.addEventListener("touchstart", function () {
+            shooting = true;
+        });
+
+        canvas.addEventListener("touchend", function () {
+            shooting = false;
+        });
+
+        updateGame();
+    </script>
+</body>
+</html>
